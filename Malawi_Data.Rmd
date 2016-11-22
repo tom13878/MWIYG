@@ -5,6 +5,8 @@ date: "22 November 2016"
 output: pdf_document
 ---
 
+This document describes the LSMS-ISA data for Malawi across two survey waves (2010 - 11, and 2013)
+
 # Plot level variables
 
 - title variable title = ag_d03 with levels GRANTED BY LOCAL
