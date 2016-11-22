@@ -1,0 +1,36 @@
+---
+title: "Malawi Dataset"
+author: "Tomas Morley"
+date: "22 November 2016"
+output: pdf_document
+---
+
+# Plot level variables
+
+- title variable title = ag_d03 with levels GRANTED BY LOCAL
+LEADERS..........1>>6
+INHERITED........2
+BRIDE PRICE......3
+PURCHASED WITH
+TITLE............4
+PURCHASED WITHOUT
+TITLE............5
+LEASEHOLD........6>>8
+RENT
+SHORT-TERM.......7>>8
+FARMING AS A
+TENANT...........8>>14
+BORROWED FOR
+FREE.............9>>14
+MOVED IN WITHOUT
+PERMISSION......10>>14
+OTHER (SPECIFY)
+
+# fertilizer prices
+
+- not joined to the main dataframe.
+
+# pesticide
+
+- pesticide variables ignore type of 
+persticide -> herbicide etc
