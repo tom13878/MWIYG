@@ -1,102 +1,77 @@
 # PROJECT: IPOP/CIMMYT/DFID
 # ``````````````````````````````````````````````````````````````````````````````````````````````````
 # ``````````````````````````````````````````````````````````````````````````````````````````````````
-# R code to link spatial data with LSMS-ISA ETH Household data
+# R code to link spatial data with LSMS-ISA MWI Household data
 # ``````````````````````````````````````````````````````````````````````````````````````````````````
 # `````````````````````````````````````````````````````````````````````````````````````````````````` 
 
-# INSTALL PACKAGES AND SET WORKING DIRECTORY
-BasePackages <- c("foreign", "stringr", "gdata", "car", "reshape2", "RColorBrewer", "plyr", "dplyr", "tidyr", "haven")
+### INSTALL PACKAGES AND SET WORKING DIRECTORY
+BasePackages<- c("tidyverse", "readxl", "stringr", "car", "scales", "RColorBrewer", "haven")
 lapply(BasePackages, library, character.only = TRUE)
 SpatialPackages <- c("rgdal", "gdalUtils", "ggmap", "raster", "rasterVis", "rgeos", "sp", "mapproj", "maptools", "proj4")
 lapply(SpatialPackages, library, character.only = TRUE)
-AdditionalPackages <- c("GSIF", "SPEI", "haven", "assertive", "countrycode")
+AdditionalPackages <- c("GSIF", "SPEI", "haven", "assertive", "countrycode", "sjmisc")
 lapply(AdditionalPackages, library, character.only = TRUE)
 
-# OPTIONS
+### OPTIONS
 options(scipen = 999) # surpress scientific notation
 options("stringsAsFactors" = FALSE) 
 options(digits = 4)
 
-# SET WORKING DIRECTORY
-dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/ETH/2011/Data"
+### SET WORKING DIRECTORY
+dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2010\\Data"
+GISPath <- "C:\\Users\\vandijkm\\DATA"
 setwd(dataPath)
 
 
-# SOURCE FUNCTIONS
+### SET COUNTRY AND YEAR
+iso3c <- "MWI"
+surveyYear <- 2010
 
-# SET COUNTRY AND YEAR
-iso3c <- "ETH"
-surveyYear <- 2011
-
-# FUNCTIONS
-# Attributes are removed so that join in dplyr works (does not work with new labels that haven package adds)
-unattribute <- function(df){
-  for(i in names(df)) df[[i]] = strip_attributes(df[[i]])
-  return(df)
-}
+### FUNCTIONS
 
 # Download Basemap
-basemapPath = paste0(dataPath, "/../../../",  "Other/Spatial/Maps", "/",iso3c)
+country.map <- readRDS(file.path(dataPath, "/../../../Other/Spatial/MWI/GADM_2.8_MWI_adm2.rds"))
+projection(country.map)
 
-# Obtain country coordinates for target country
-Get.country.shapefile.f <- function(iso3c, lev=0, proj = "+proj=longlat +datum=WGS84"){
+### PREPARE LSMS SPATIAL DATAPOINTS
+# Get y1_hhid-GIS link
+HH.geo <- read_dta(file.path(dataPath, "Geovariables\\HouseholdGeovariables_IHS3_Rerelease.dta")) %>%
+            rename(lat = lat_modified, lon = lon_modified, eaid = ea_id) 
   
-  #download country boundary as spatialpolygonDF (and rewrite as .shp for convenience)
-  targetfile <- paste(iso3c, paste("_adm", lev, ".Rdata", sep=""), sep="")
-  if(file.exists(paste(basemapPath, targetfile, sep="/"))){
-    load(paste(basemapPath, targetfile, sep="/"))
-  } else {
-    gadm=getData('GADM', country=iso3c, level=lev, path=basemapPath)
-  }
-  
-  # change projection 
-  projection <- proj
-  country.sp <- spTransform(gadm, CRS(projection))
-  return(country.sp)
-}
+plot.geo <- read_dta(file.path(dataPath, "Geovariables\\PlotGeovariables_IHS3_Rerelease.dta")) %>%
+  dplyr::select(case_id, HHID, dist_hh, plot_id) # NB we do not select ea_id as they seem to be wrong => join excludes many plots
 
-# Download Basemap
-country.map <- Get.country.shapefile.f(iso3c, 2)
-
-# PREPARE LSMS SPATIAL DATAPOINTS
-# Get y2_hhid-GIS link
-HH.geo <- read_dta("Pub_ETH_HouseholdGeovariables_Y1.dta") %>%
-            rename(lat = LAT_DD_MOD, lon = LON_DD_MOD) 
-
-plot.geo <- read_dta("Pub_ETH_PlotGeovariables_Y1.dta")
-
-# All ea_id have unique gps coordinates. 
-# In the Prices_ETH file we want to calculate prices by ea_id2, which creates duplicates of GSP variables.
-check <- HH.geo %>% group_by(ea_id) %>% summarise(check = length(unique(lon))) %>% filter(check>1)         
-
-# Create list of ea_id and coordinates
-geo.base <- HH.geo %>% dplyr::select(lat, lon, eaid = ea_id) %>% # ea_id renamed to eaid to preserve standard code
+# Create list of coordinates
+geo.base <- HH.geo %>% dplyr::select(lat, lon, eaid) %>% 
                         unique() %>%
                         do(filter(., complete.cases(.))) %>%
-                        as.data.frame() 
+                        as.data.frame()
+
                         
 
 # Create list of plot variables
-geo.plot <- unattribute(plot.geo) 
+geo.plot <- plot.geo %>%
+  remove_all_labels
 
 # create list of HH level variables
-geo.hh <- unattribute(HH.geo) 
+geo.hh <- HH.geo %>%
+  remove_all_labels
 
 # Create spatial points 
-standardproj<-"+proj=longlat +datum=WGS84"
+standardproj <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 geo.coord <- geo.base %>% 
               dplyr::select(lon, lat) %>%
-              SpatialPoints(., proj4string=CRS(standardproj))
+              SpatialPoints(., proj4string=CRS(projection(country.map)))
 
 # REGION INFORMATION
 geo.region  <- over(geo.coord, country.map) %>%
   cbind(geo.base,.) %>%
-  dplyr::select(-ID_0, -ISO, -NAME_0, -NL_NAME_2, -VARNAME_2, -TYPE_2, -ENGTYPE_2)  
+  dplyr::select(-ID_0, -ISO, -NAME_0, -NL_NAME_2, -VARNAME_2, -TYPE_2, -ENGTYPE_2, - HASC_2, CCN_2, CCA_2)  
 
 
 # MONTHLY RAINFALL DATA
-montlyRainfallPath <- "D:\\Data\\IPOP\\CRU_TS_3.22\\Processed"
+montlyRainfallPath <- file.path(GISPath, "CRU_TS_3.22\\Processed")
 pet <-brick(paste(montlyRainfallPath, "MonthlyEvapotranspiration190101_201312", sep="\\"))
 pre <-brick(paste(montlyRainfallPath, "MonthlyPrecipitation190101_201312", sep="\\"))
 
@@ -116,73 +91,73 @@ geo.pre <- raster::extract(pre, geo.coord) %>%
 # Ehtiopa has two rain seasons; short (Belg) and long(Meher). 
 # The LSMS only seems to cover the Meher season, which is most relevant for Maize (FAO and FEWS).
 # We calculate the SPEI for the five months May-including September.
-
-# Funtion to calculate SPEI
-spei.f <- function(data, speiperiod, sd, ed){
-  spei.calc <- spei(data$speicalc, speiperiod)
-  spei.calc <- spei.calc$fitted
-  t <- seq(ymd(sd),ymd(ed), by='months')
-  spei.df <- data.frame(speicalc=as.matrix(spei.calc), date= t) %>%
-    mutate(month = month(date, label=TRUE),
-           year = year(date))
-  return(spei.df)
-}
-
-# Period over which SPEI is calculated corresponding with five month growth period
-speiendmonth <- "Sep"
-speiperiod <- 5
-gsmonths <- c("May", "Jun", "Jul", "Aug", "Sep")
-
-# Period for which SPEI is estimated. To be increased with more historical data
-sd <- "1901-01-01"
-ed <- "2013-12-01"
-
-# Calculate SPEI
-geo.spei <- left_join(geo.pre, geo.pet) %>%
-  do(filter(., complete.cases(.)))
-
-# Add date information. Lubridate used to crash in R because of a problem in dplyr. This is solved by using the development version.
-# I use base code here.
-library(lubridate)
-geo.spei <- geo.spei %>%  mutate(date = gsub("X","", date))
-geo.spei$date <- as.Date(geo.spei$date, "%Y.%m.%d")
-geo.spei$year <- format(geo.spei$date, "%Y")
-geo.spei$month <- format(geo.spei$date, "%b")
-geo.spei$days_in_month = days_in_month(geo.spei$date)
-geo.spei <- geo.spei %>%
-  mutate(petmonth =  pet*days_in_month,
-         speicalc = pre-petmonth) %>%
-  arrange(eaid, year, month) %>%
-  do(filter(., complete.cases(.)))%>%
-  ddply(.,.(eaid, lat, lon), spei.f, speiperiod, sd, ed) %>%
-  filter(month == speiendmonth & year == surveyYear) %>%
-  dplyr::select(-month, - year, -date)
-names(geo.spei)[4] <- "SPEI" 
-
-# Total rainfall in growing season
-# Add date information. Lubridate used to crash in R because of a problem in dplyr. This is solved by using the development version.
-# I use base code here.
-geo.monthlyrainfall <- geo.pre %>%  mutate(date = gsub("X","", date))
-geo.monthlyrainfall$date <- as.Date(geo.monthlyrainfall$date, "%Y.%m.%d")
-geo.monthlyrainfall$year <- format(geo.monthlyrainfall$date, "%Y")
-geo.monthlyrainfall$month <- format(geo.monthlyrainfall$date, "%b")
-geo.monthlyrainfall <- geo.monthlyrainfall %>%
-  filter(month %in% gsmonths) %>%
-  group_by(eaid, lat, lon, year) %>%
-  summarize(gsRainfall = sum(pre, na.rm=T)) %>%
-  filter(year==surveyYear) %>%
-  dplyr::select(-year)
+# 
+# # Funtion to calculate SPEI
+# spei.f <- function(data, speiperiod, sd, ed){
+#   spei.calc <- spei(data$speicalc, speiperiod)
+#   spei.calc <- spei.calc$fitted
+#   t <- seq(ymd(sd),ymd(ed), by='months')
+#   spei.df <- data.frame(speicalc=as.matrix(spei.calc), date= t) %>%
+#     mutate(month = month(date, label=TRUE),
+#            year = year(date))
+#   return(spei.df)
+# }
+# 
+# # Period over which SPEI is calculated corresponding with five month growth period
+# speiendmonth <- "Sep"
+# speiperiod <- 5
+# gsmonths <- c("May", "Jun", "Jul", "Aug", "Sep")
+# 
+# # Period for which SPEI is estimated. To be increased with more historical data
+# sd <- "1901-01-01"
+# ed <- "2013-12-01"
+# 
+# # Calculate SPEI
+# geo.spei <- left_join(geo.pre, geo.pet) %>%
+#   do(filter(., complete.cases(.)))
+# 
+# # Add date information. Lubridate used to crash in R because of a problem in dplyr. This is solved by using the development version.
+# # I use base code here.
+# library(lubridate)
+# geo.spei <- geo.spei %>%  mutate(date = gsub("X","", date))
+# geo.spei$date <- as.Date(geo.spei$date, "%Y.%m.%d")
+# geo.spei$year <- format(geo.spei$date, "%Y")
+# geo.spei$month <- format(geo.spei$date, "%b")
+# geo.spei$days_in_month = days_in_month(geo.spei$date)
+# geo.spei <- geo.spei %>%
+#   mutate(petmonth =  pet*days_in_month,
+#          speicalc = pre-petmonth) %>%
+#   arrange(eaid, year, month) %>%
+#   do(filter(., complete.cases(.)))%>%
+#   ddply(.,.(eaid, lat, lon), spei.f, speiperiod, sd, ed) %>%
+#   filter(month == speiendmonth & year == surveyYear) %>%
+#   dplyr::select(-month, - year, -date)
+# names(geo.spei)[4] <- "SPEI" 
+# 
+# # Total rainfall in growing season
+# # Add date information. Lubridate used to crash in R because of a problem in dplyr. This is solved by using the development version.
+# # I use base code here.
+# geo.monthlyrainfall <- geo.pre %>%  mutate(date = gsub("X","", date))
+# geo.monthlyrainfall$date <- as.Date(geo.monthlyrainfall$date, "%Y.%m.%d")
+# geo.monthlyrainfall$year <- format(geo.monthlyrainfall$date, "%Y")
+# geo.monthlyrainfall$month <- format(geo.monthlyrainfall$date, "%b")
+# geo.monthlyrainfall <- geo.monthlyrainfall %>%
+#   filter(month %in% gsmonths) %>%
+#   group_by(eaid, lat, lon, year) %>%
+#   summarize(gsRainfall = sum(pre, na.rm=T)) %>%
+#   filter(year==surveyYear) %>%
+#   dplyr::select(-year)
 
 
 # SOIL DATA
 # Extract soil data and link to GIS coordinates of plots/housholds
-soilPath <- paste("D:\\Data\\IPOP\\AFSIS\\Processed",iso3c, sep="\\")
+soilPath <- file.path(GISPath, paste("AFSIS\\Processed",iso3c, sep="\\"))
 setwd(soilPath)
 countryFiles1km <- list.files(pattern = "\\__1km.tif$")
 soil <-stack(countryFiles1km)
 
 # ROOT DEPTH
-RootDepthPath <- paste("D:\\Data\\IPOP\\AFSIS\\Processed",iso3c, sep="\\")
+RootDepthPath <- soilPath
 setwd(RootDepthPath)
 RootDepth <-raster(paste(iso3c, "_", "af_agg_ERZD_TAWCpF23mm__M_1km.tif", sep=""))
 
@@ -255,128 +230,127 @@ geo.phsd1_sd5 <- geo.soil %>%
 
 geo.ph <- left_join(geo.phsd1_sd3, geo.phsd1_sd5)
 
-# GYGA DATA
-GYGApath <- "D:\\Data\\IPOP\\GYGA\\"
+# GYGA DATA is not available, we use GAEZ data to determine yield potential fir maize
+GAEZpath <- file.path(GISPath, "GAEZ")
 
 # # Get GYGA map
-dsn=paste(GYGApath, "\\CZ_SubSaharanAfrica\\CZ_AFRGYGACNTRY.shp", sep="")
-ogrListLayers(dsn)
-ogrInfo(dsn, layer="CZ_AFRGYGACNTRY")
-GYGA <- readOGR(dsn, layer = "CZ_AFRGYGACNTRY") %>%
-  spTransform(., CRS("+proj=longlat +datum=WGS84"))
+maize_yld <- raster(file.path(GISPath, "GAEZ/act2000rmze2000yld_package/act2000_r_mze_2000_yld.tif"))
+maize_gap <- raster(file.path(GISPath, "GAEZ/gap2000rmze2000qga_package/gap2000_r_mze_2000_qga.tif"))
 
-# Link yield gap data
-# Yield gap data is provided in a separate file.
-# in order to merge data with spatialpolygondataframe the row.names need to be the same.
-# For this reason I first merge the additionald data and then create a spatialpolygondataframe
-# again ensuring that the rownames are preserved.
+# Combine to calculate yield potential
+GAEZ <- maize_yld + maize_gap
 
-GYGA.yield.data <- read.xls(file.path(GYGApath, "GygaRainfedMaizeSubSaharanAfrica.xlsx"), sheet="Climate zone") %>%
-  rename(GRIDCODE = CLIMATEZONE, REG_NAME = COUNTRY) %>%
-  mutate(iso = countrycode(REG_NAME,"country.name", "iso3c")) 
-GYGA@data <- GYGA@data %>% mutate(iso = countrycode(REG_NAME,"country.name", "iso3c")) %>%
-  left_join(., GYGA.yield.data)
+# Show data
+MWI.GAEZ <- raster::crop(GAEZ, country.map)
+plot(MWI.GAEZ)
+plot(country.map, add = T)
+plot(geo.coord, add = T, pch = 18, col="red")
 
-# # Extract data
- geo.GYGA <- raster::extract(GYGA, geo.coord) %>%
-   dplyr::select(CROP, YA, YW, YW.YA, YP, YP.YA, iso) %>%
-   cbind(geo.base,.)
+# extract data
+geo.GAEZ <- raster::extract(GAEZ, geo.coord) %>%
+  cbind(geo.base,.) %>%
+  do(filter(., complete.cases(.))) # NA values for some regions removed
+names(geo.GAEZ)[4] <- "YW"
+geo.GAEZ$YW[geo.GAEZ$YW==0] <- NA # set 0 values to NA
 
- # FARMING SYSTEMS 
- # http://rpackages.ianhowson.com/rforge/raster/man/factor.html on factor values in raster
- # http://oscarperpinan.github.io/rastervis/ for plotting raster
- fsPath <- "D:\\Data\\IPOP\\FarmingSystems\\fs_2012_tx--ssa.tif_5"
- fs <-raster(file.path(fsPath, "FS_2012_TX--SSA.tif"))
+# # FARMING SYSTEMS 
+# # http://rpackages.ianhowson.com/rforge/raster/man/factor.html on factor values in raster
+# # http://oscarperpinan.github.io/rastervis/ for plotting raster
+# fsPath <- "D:\\Data\\IPOP\\FarmingSystems\\fs_2012_tx--ssa.tif_5"
+# fs <-raster(file.path(fsPath, "FS_2012_TX--SSA.tif"))
+#  
+#  # plot maps
+# p <- crop (fs, country.map)
+# levelplot(p) +layer(sp.polygons(country.map, col='black')) 
+#  
+# # Extract factor values
+# geo.fs <- raster::extract(fs, geo.coord)
+# fs_val <- factorValues(fs, geo.fs)
+#  
+# # Extract data, remove numbering and turn into factor
+# geo.fs <- raster::extract(fs, geo.coord) %>% 
+#  cbind(geo.base,.) %>%
+#  cbind(., fs_val) %>%
+#  mutate(fs = str_sub(category, 4),
+#         fs = factor(trimws(fs))) %>%
+#  dplyr::select(-.,-category)
  
- # plot maps
- p <- crop (fs, country.map)
- levelplot(p) +layer(sp.polygons(country.map, col='black')) 
- 
- # Extract factor values
- geo.fs <- raster::extract(fs, geo.coord)
- fs_val <- factorValues(fs, geo.fs)
- 
- # Extract data, remove numbering and turn into factor
- geo.fs <- raster::extract(fs, geo.coord) %>% 
-   cbind(geo.base,.) %>%
-   cbind(., fs_val) %>%
-   mutate(fs = str_sub(category, 4),
-          fs = factor(trimws(fs))) %>%
-   dplyr::select(-.,-category)
- 
- # BIND ALL SPATIAL INFORMATION
- # rename eaid to eaid2 again
- geo.total <-  left_join(geo.region, geo.monthlyrainfall) %>%
-   left_join(., geo.spei) %>%
-   left_join(., geo.rootdepth) %>%
+# BIND ALL SPATIAL INFORMATION
+# rename eaid to eaid2 again
+geo.total <-  left_join(geo.region, geo.rootdepth) %>%
+#   left_join(., geo.spei) %>%
    left_join(., geo.ph) %>%
    left_join(., geo.soc) %>%
-   left_join(., geo.GYGA) %>%
-   left_join(., geo.fs) %>%
+   left_join(., geo.GAEZ) %>%
+#   left_join(., geo.fs) %>%
    rename(ea_id = eaid) 
 
  
 # check missing values (not including GYGA data for which we know data is missing)
-geo.check <- geo.total %>% dplyr::select(-CROP:-iso, -HASC_2, -CCN_2) %>% do(filter(., !complete.cases(.))) 
+geo.check <- geo.total %>% dplyr::select(-CCA_2, -CCN_2) %>% do(filter(., !complete.cases(.))) 
 geo.check.plot <- geo.check %>% 
- dplyr::select(lon, lat) %>%
- SpatialPoints(., proj4string=CRS(standardproj))
+   dplyr::select(lon, lat) %>%
+   SpatialPoints(., proj4string=CRS(standardproj))
 
-# Data is missing for one location, which appears to be on the border but due to the offset are now located outside the country.
+# Data is missing for two locations, which appear to be on the border but due to the offset are now located outside the country.
 # Try to see if it is possible to move points back into ETH using shortest distance measurement.
  
 # # Plot missing values in GoogleMaps
 # # Does NOT work in explorer => set default browser to Firefox
-# library(plotGoogleMaps)
-# geo.check.google <- spTransform(geo.check.plot, CRS('+init=epsg:28992'))
-# m <- plotGoogleMaps(geo.check.google)
-# 
+#library(plotGoogleMaps)
+#geo.check.google <- spTransform(geo.check.plot, CRS('+init=epsg:28992'))
+#m <- plotGoogleMaps(geo.check.google)
+ 
 # Plot missing values on map
 #plot(crop(pet[[1356]], country.map))
 plot(country.map)
 points(geo.check.plot, pch = 18, col="red")
  
 # MERGE LSMS AND GEO DATA
-
+ 
 # Merge plot and household level data
 geo.total.plot <- left_join(geo.hh, geo.plot) %>% 
-  left_join(., geo.total)
+ left_join(., geo.total)
 
 # Rename and recode 
 AEZ_code <- read.csv(file.path(paste0(dataPath,"/../../.."), "Other\\Spatial\\Other\\AEZ_code.csv"))
 
 geo.total.plot <- geo.total.plot %>%
-  transmute(
-    lat,
-    lon,
-    dist_hh = dist_household,
-    dist_road = dist_road,
-    dist_popcenter = dist_popcenter,
-    dist_market,
-    dist_borderpost = dist_borderpost,
-    dist_regcap = dist_admctr,
-    AEZ = ssa_aez09,
-    elevation = plot_srtm,
-    slope = plot_srtmslp,
-    twi = plot_twi,
-    nutr_av = sq1,
-    rain_year = h2011_tot,
-    rain_wq = h2011_wetQ,
-    ea_id, 
-    household_id, holder_id, 
-    parcel_id, field_id, 
-    region_name=NAME_1, district_name=NAME_2,
-    ph=ph_sd1_sd3, ph2=ph_sd1_sd5,
-    SOC=SOC_sd1_sd3, SOC2=SOC_sd1_sd5, rain_CRU=gsRainfall,
-    SPEI, RootDepth,
-    fs, 
-    YA, YW, YP
-  ) %>%
-  mutate(AEZ = droplevels(factor(AEZ,
-                                 levels = AEZ_code$code,
-                                 labels = AEZ_code$AEZ)))
-
-
-
-# Write file
-saveRDS(geo.total.plot, file = "D:/Data/Projects/ETHYG/Cache/ETH_geo_2011.rds")
+ transmute(
+   lat,
+   lon,
+   dist_hh = dist_hh,
+   dist_road = dist_road,
+   dist_popcenter = dist_popcenter,
+   #dist_market = dist_agmrkt,
+   dist_admarc = dist_admarc,
+   dist_borderpost = dist_borderpost,
+   dist_regcap = dist_boma,
+   AEZ = ssa_aez09,
+   elevation = srtm_eaf,
+   slope = afmnslp_pct,
+   twi = twi_mwi,
+   nutr_av = sq1,
+   rain_year = h2010_tot,
+   rain_wq = h2010_wetq,
+   rain_year_avg = anntot_avg,
+   rain_wq_avg = wetq_avg,
+   plot_id, 
+   case_id,
+   HHID,
+   region_name=NAME_1, district_name=NAME_2,
+   ph=ph_sd1_sd3, ph2=ph_sd1_sd5,
+   SOC=SOC_sd1_sd3, SOC2=SOC_sd1_sd5, 
+   #rain_CRU=gsRainfall,
+   #SPEI,
+   #RootDepth,
+   #fs, 
+   YW
+   ) %>%
+ mutate(AEZ = droplevels(factor(AEZ,
+                          levels = AEZ_code$code,
+                                  labels = AEZ_code$AEZ)))
+ 
+ # Write file
+ saveRDS(geo.total.plot, file = "D:/Data/Github/MWIYG/Cache/MWI_geo_2010.rds")
+ 
