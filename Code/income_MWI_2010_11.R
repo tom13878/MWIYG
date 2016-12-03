@@ -139,14 +139,14 @@ crop <- rbind(cropRS, cropDS)
 # item, unit and conversion - only applies
 # to food not raw crops
 
-kgfactor <- read_dta(file.path(dataPath, "../../IHS3_kgfactor_DTA/kgfactor.dta"))
+crop$crop_value_kg <- ifelse(crop$qty_unit %in% 1, crop$qty_harv, NA)
 
 # calculate the full value of crops
 # per household
 
 on_farm_income_crop <- group_by(crop, HHID, case_id) %>%
-  summarise(crop_value_hh=sum(crop_value, na.rm=TRUE))
-rm(crop, crop1, crop2)
+  summarise(crop_value_hh=sum(crop_value_kg, na.rm=TRUE))
+rm(crop, cropRS, cropDS)
 
 # rent on land that household member owns
 rentRS <- read_dta(file.path(dataPath, "AGSEC2A.dta")) %>%
