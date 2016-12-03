@@ -1,6 +1,5 @@
 # -------------------------------------
 #' Plot areas Malawi wave 2 (2013)
-#'
 # ------------------------------------- 
 
 # load packages
@@ -10,17 +9,27 @@ library(tidyr)
 
 # set working directory
 if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/Other/Plot_size"
+  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2013/Data"
 } else {
-  dataPath <- "W:/LEI/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/Other/Plot_size"
+  dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
 }
 
-# Areas for wave 1 have been imputed by the world bank lsms-isa team
-# as some plot did not have a gps measurement.
+# area measurements recorded in Module B_1 of the
+# wave 2 questionnaire. Some plots were not measured
+# but only 8%.
 
-areas <- read_dta(file.path(dataPath, "areas_mwi_y1_imputed.dta")) %>%  
-  select(y2_hhid=case_id, plotnum,
-         area_farmer=area_sr, area_gps=area_gps_mi_50)
+areas <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_B1.dta")) %>%  
+  select(y2_hhid, plotnum=ag_b100a,
+         area_farmer=ag_b104a, areas_farmer_unit = ag_b104b,
+         area_gps=ag_b104c)
 
-areas$area_gps <- ifelse(areas$area_gps %in% 0, NA, areas$area_gps)
+# some self reported measurements are in acres and m2
+# change to hectares
+areas$area_farmer <- ifelse(areas$areas_farmer_unit %in% 1,
+                            areas$area_farmer * 0.404685642,
+                            ifelse(areas$areas_farmer_unit %in% 3,
+                                   areas$area_farmer * 0.0001, NA))
 
+areas$areas_farmer_unit <- NULL
+
+rm(dataPath)
