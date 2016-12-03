@@ -19,12 +19,13 @@ library(dplyr)
 
 oput <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_G.dta")) %>%
   select(HHID, case_id, plotnum=ag_g0b, crop_code=ag_g0d,
-         one_crop=ag_g01, crop_share=ag_g03, harv_start = ag_g12a,
+         crop_stand=ag_g01, crop_share=ag_g03, harv_start = ag_g12a,
          harv_end = ag_g12b, crop_qty_harv1=ag_g13a,
          crop_qty_harv2=ag_g13b, crop_qty_harv3=ag_g13c)
 
-oput$one_crop <- ifelse(oput$one_crop %in% 1, 1,
-                        ifelse(oput$one_crop %in% 2, 0, NA))
+# change one_crop to crop stand
+oput$crop_stand <- ifelse(oput$crop_stand %in% 1, 1,
+                        ifelse(oput$crop_stand %in% 2, 0, NA))
 oput$crop_share <- as_factor(oput$crop_share)
 oput$harv_start <- as_factor(oput$harv_start)
 oput$harv_end <- as_factor(oput$harv_end)

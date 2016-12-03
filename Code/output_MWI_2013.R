@@ -1,5 +1,5 @@
 # -------------------------------------
-# Output MWI 2010_11 (wave 1)
+# Output MWI 2013 (wave 2)
 # two seasons rainy and dry
 # crops and permanent crops
 # seed = seed planted in the rainy season for crop (factor)
@@ -7,9 +7,9 @@
 
 # set working directory
 if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2010_11/Data"
+  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2013/Data"
 } else {
-  dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2010/Data"
+  dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
 }
 
 # load packages
@@ -18,13 +18,14 @@ library(dplyr)
 
 
 oput <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_G.dta")) %>%
-  select(HHID, case_id, plotnum=ag_g0b, crop_code=ag_g0d,
-         one_crop=ag_g01, crop_share=ag_g03, harv_start = ag_g12a,
-         harv_end = ag_g12b, crop_qty_harv1=ag_g13a,
-         crop_qty_harv2=ag_g13b, crop_qty_harv3=ag_g13c)
+  select(y2_hhid, plotnum=ag_g00, crop_code=ag_g0b, crop_stand = ag_g01,
+         one_crop=ag_g02, crop_share=ag_g03, harv_start = ag_g12a,
+         harv_end = ag_g12b, crop_qty_harv1 = ag_g09a,
+         crop_qty_harv2 = ag_g09b, crop_qty_harv3 = ag_g09c)
 
 oput$one_crop <- ifelse(oput$one_crop %in% 1, 1,
                         ifelse(oput$one_crop %in% 2, 0, NA))
+oput$crop_stand <- as_factor(oput$crop_stand)
 oput$crop_share <- as_factor(oput$crop_share)
 oput$harv_start <- as_factor(oput$harv_start)
 oput$harv_end <- as_factor(oput$harv_end)
@@ -70,7 +71,7 @@ vegetables <- c(40, 44)
 legumes <- c(11, 12, 13, 14, 15, 16, 34, 35, 38)
 
 
-oput_x <- group_by(oput, HHID, case_id, plotnum) %>%
+oput_x <- group_by(oput, y2_hhid, plotnum) %>%
   summarise(crop_count=length(unique(crop_code[!is.na(crop_code)])),
             fruit=ifelse(any(crop_code %in% fruit), 1, 0),
             cashCropsPerm=ifelse(any(crop_code %in% cashCropsPerm), 1, 0),
@@ -87,15 +88,19 @@ oput <- left_join(oput, oput_x); rm(oput_x)
 # and wok out how to get the prices information. Prices will be
 # overall values -> probably more accurate.
 
-# crop production from the rainy season of 2010_11
+# crop production from the rainy season of 2013
 # in order to get unit prices of each crop.
 crop_unit_priceRS <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_I.dta")) %>%
-  select(HHID, case_id, crop_code = ag_i0b,
+  select(y2_hhid, crop_code = ag_i0b,
          qty_harv = ag_i02a, qty_unit = ag_i02b,
          qty_SU = ag_i02c, crop_value = ag_i03)
-crop_unit_priceRS$qty_harvkg <- ifelse(crop_unit_priceRS$qty_unit %in% 1, crop_unit_priceRS$qty_harv, NA)
+
+# get a unit price, again only looking at the 
+# quantities recorded in kilograms
+crop_unit_priceRS$qty_harvkg <- ifelse(crop_unit_priceRS$qty_unit %in% 1,
+                                       crop_unit_priceRS$qty_harv, NA)
 crop_unit_priceRS$crop_price <- crop_unit_priceRS$crop_value/crop_unit_priceRS$qty_harvkg
-crop_unit_priceRS <- select(crop_unit_priceRS, HHID, case_id, crop_code, crop_price)
+crop_unit_priceRS <- select(crop_unit_priceRS, y2_hhid, crop_code, crop_price)
 
 # join prices with output
 oput <- left_join(oput, crop_unit_priceRS)
