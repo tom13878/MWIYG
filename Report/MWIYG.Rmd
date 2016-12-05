@@ -1,0 +1,34 @@
+---
+title: "Policies to close the yield gap"
+author: "Michiel van Dijk"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  word_document:
+    reference_docx: ../Common/word_styles_01.docx
+bibliography: ../Common/MWIYG.bib
+    
+---
+
+```{r setup, include=FALSE}
+library(rprojroot)
+root <- find_root(is_rstudio_project)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+The concept of yield gaps is frequently used as a framing device for agricultural policy in Sub-saharan Africa [@Sumberg]. Yield gap studies are interesting for two reasons. The first is that they measure the size of they yield gap, defined as the difference between potential yield (Yp) and actual yield (Ya) to ilustrate the potential to increase future yield. The second is to reveal key causes for the existence of yield gaps in order to provide policy and management recommendations to increase agricultural productivity and efficiency. A recent example of a mayor effort to quantify yield gaps is the Global Yield Gap Atlas, which provides detailed bottom-up yield gap assessment of [XX] African countries. 
+
+Although, yield gap analysis has its roots in crop production ecology and is mostly published in agronomic journals, there are many similarites and overlaps with micro-economic approaches that aim to explain technical and allocation efficiency in agricultural production. Both sciences related approaches to explain variations in crop yield. In agronomy, it is common to estimate yield response functions using data on input use from experimental fields [REF], while in economics similar functions are used but using non-experimental data from large household surveys [REF]. A few studies combined both approaches [Van Ittersum AjA, Huang, see also De koeier on overlaps!]. 
+
+In his review of the use and application of yield gaps in four mayor policy reports, @Sumberg stated that _"it is most often used without the disci- pline or caveats associated with the best examples of its use in crop production ecology and microeconomics"_ and _“no indication is given how to move systematically from the identification of a gap to the development of specific policy prescriptions”_. The aim of is to combined both approaches and link it to policy recommendations. It builds earlier research, where we developed a conceptual framework to link economic and agronomic yield gap approaches and decompose the yield gap. This study links the various gaps to potential policies.... The framework is illustrated using data for Malawi.
+
+The paper is structures as follows
+
+# Conceptual framework
+
+
+
+
+
+
+# References
