@@ -230,10 +230,10 @@ fertDS <- group_by(fertDS, y2_hhid, plotnum) %>%
 # raing season and dry season.
 # -------------------------------------
 
-plotRS <- left_join(plotRS, fertRS) %>% mutate(season="RS")
-plotDS <- left_join(plotDS, fertDS) %>% mutate(season="DS")
-plot <- rbind(plotRS, plotDS)
+plotRS_2013 <- left_join(plotRS, fertRS) %>% mutate(season="RS")
+plotDS_2013 <- left_join(plotDS, fertDS) %>% mutate(season="DS")
+plot_2013 <- rbind(plotRS, plotDS)
 
 # take out the trash
 rm(dataPath, conv, fertDS, fertDS1, fertDS2,
-   fertRS, fertRS1, fertRS2, miss)
+   fertRS, fertRS1, fertRS2, miss, plotDS, plotRS)
