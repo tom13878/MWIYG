@@ -24,11 +24,11 @@ if(Sys.info()["user"] == "Tomas"){
 # as some plots did not have a gps measurement. Measurements appear
 # to be in hectacres
 
-areas <- read_dta(file.path(dataPath, "areas_mwi_y1_imputed.dta")) %>%  
+areas10_11 <- read_dta(file.path(dataPath, "areas_mwi_y1_imputed.dta")) %>%  
   select(y2_hhid=case_id, plotnum,
          area_farmer=area_sr, area_gps=area_gps_mi_50)
 
-areas$area_gps <- ifelse(areas$area_gps %in% 0, NA, areas$area_gps)
+areas10_11$area_gps <- ifelse(areas10_11$area_gps %in% 0, NA, areas10_11$area_gps)
 
 rm(dataPath)
 
