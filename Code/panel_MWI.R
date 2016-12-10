@@ -87,6 +87,29 @@ source(file.path(filePath, "household_MWI_2010_11.r"))
 source(file.path(filePath, "household_MWI_2013.r"))
 
 # join in each year first
+# wave 1
 cross_section10_11 <- left_join(oput_2010_11, plotRS_2010_11)
 cross_section10_11 <- left_join(cross_section10_11, areas10_11)
-cross_section10_11 <- left_join(oput_2010_11, plotRS_2010_11)
+cross_section10_11 <- left_join(cross_section10_11, lab2010_11)
+cross_section10_11 <- left_join(cross_section10_11, HH10_11)
+cross_section10_11$year <- 2011
+
+# wave 2
+cross_section13 <- left_join(oput2013, plotRS_2013)
+cross_section13 <- left_join(cross_section13, areas13)
+cross_section13 <- left_join(cross_section13, lab2013)
+cross_section13 <- left_join(cross_section13, HH13)
+cross_section10_11$year <- 2013
+
+# Now change the household ids as described above
+cross_section10_11$hhid <- str_pad(cross_section10_11$HHID, 4, pad = "0")
+cross_section13$hhid <- sapply(strsplit(cross_section13$y2_hhid, "-"),
+                               function(i) i[1])
+
+cross_section10_11 <- select(cross_section10_11, hhid, everything())
+cross_section13 <- select(cross_section13, hhid, everything())
+
+# 
+keep <- intersect(names(cross_section10_11), names(cross_section13))
+panel <- rbind(cross_section10_11[, keep], cross_section13[, keep])
+panel$plotnum <- NULL
