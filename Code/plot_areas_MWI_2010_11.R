@@ -25,7 +25,7 @@ if(Sys.info()["user"] == "Tomas"){
 # to be in hectacres
 
 areas10_11 <- read_dta(file.path(dataPath, "areas_mwi_y1_imputed.dta")) %>%  
-  select(y2_hhid=case_id, plotnum,
+  select(case_id, plotnum,
          area_farmer=area_sr, area_gps=area_gps_mi_50)
 
 areas10_11$area_gps <- ifelse(areas10_11$area_gps %in% 0, NA, areas10_11$area_gps)
