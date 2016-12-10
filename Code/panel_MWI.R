@@ -86,3 +86,7 @@ source(file.path(filePath, "labour_MWI_2013.R"))
 source(file.path(filePath, "household_MWI_2010_11.r"))
 source(file.path(filePath, "household_MWI_2013.r"))
 
+# join in each year first
+cross_section10_11 <- left_join(oput_2010_11, plotRS_2010_11)
+cross_section10_11 <- left_join(cross_section10_11, areas10_11)
+cross_section10_11 <- left_join(oput_2010_11, plotRS_2010_11)
