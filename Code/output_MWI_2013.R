@@ -40,9 +40,6 @@ oput2013$crop_code <- as.integer(oput2013$crop_code)
 # A further complication is that utput may
 # be shelled or unshelled
 
-oput2013$crop_qty_harv <- ifelse(oput2013$crop_qty_harv2 %in% 1,
-                             oput2013$crop_qty_harv1, NA)
-
 #' difficulty with non standard units. 
 #' There is a market questionnaire that
 #' should convert these units - but not
