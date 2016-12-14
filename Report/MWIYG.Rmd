@@ -10,10 +10,30 @@ bibliography: ../Common/MWIYG.bib
 ---
 
 ```{r setup, include=FALSE}
+# Knitr settings
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, fig.height = 10, fig.width = 10)
+
+# Pander settings
+library(pander)
+panderOptions('table.alignment.default', function(df)
+    ifelse(sapply(df, is.numeric), 'right', 'left'))
+panderOptions('table.split.table', Inf)
+panderOptions('big.mark', ",")
+panderOptions('keep.trailing.zeros', TRUE)
+
+# Determine root path
 library(rprojroot)
 root <- find_root(is_rstudio_project)
-knitr::opts_chunk$set(echo = FALSE)
+
+# Source figures, tables and maps
+source(file.path(root, "Code/MWI_fig.R"))
+source(file.path(root, "Code/MWI_tbl.R"))
+source(file.path(root, "Code/MWI_map.R"))
+
 ```
+
 
 # Introduction
 The concept of yield gaps is frequently used as a framing device for agricultural policy in Sub-saharan Africa [@Sumberg]. Yield gap studies are interesting for two reasons. The first is that they measure the size of they yield gap, defined as the difference between potential yield (Yp) and actual yield (Ya) to ilustrate the potential to increase future yield. The second is to reveal key causes for the existence of yield gaps in order to provide policy and management recommendations to increase agricultural productivity and efficiency. A recent example of a mayor effort to quantify yield gaps is the Global Yield Gap Atlas, which provides detailed bottom-up yield gap assessment of [XX] African countries. 
