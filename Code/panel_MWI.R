@@ -86,8 +86,13 @@ source(file.path(filePath, "labour_MWI_2013.R"))
 source(file.path(filePath, "household_MWI_2010_11.r"))
 source(file.path(filePath, "household_MWI_2013.r"))
 
+# location variables
+source(file.path(filePath, "location_MWI_2010_11.r"))
+source(file.path(filePath, "location_MWI_2013R.r"))
+
 # join in each year first
 # wave 1
+cross_section10_11 <- left_join(location, HH10_11)
 cross_section10_11 <- left_join(oput_2010_11, plotRS_2010_11)
 cross_section10_11 <- left_join(cross_section10_11, areas10_11)
 cross_section10_11 <- left_join(cross_section10_11, lab2010_11)
