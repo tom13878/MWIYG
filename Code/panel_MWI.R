@@ -32,38 +32,6 @@ library(stringr)
 if(Sys.info()["user"] == "Tomas"){
   filePath <- "C:/Users/Tomas/Documents/LEI/MWIYG/Code"}
 
-
-# # household variables
-# source(file.path(filePath, "household_MWI_2010_11.r"))
-# source(file.path(filePath, "household_MWI_2013.r"))
-# 
-# # testing to see if the panel is joined properly
-# HH13$y2_hhid <- sapply(strsplit(HH13$y2_hhid, "-"), function(i) i[1])
-# HH10_11$y1_hhid <- str_pad(HH10_11$HHID, 4, pad = "0")
-# table(HH13$y2_hhid %in% HH10_11$y1_hhid)
-# table(HH10_11$y1_hhid %in% HH13$y2_hhid)
-# 
-# names(HH10_11)
-# names(HH13)
-# 
-# HH10_11 <- rename(HH10_11, hhid = y1_hhid)
-# HH13 <- rename(HH13, hhid = y2_hhid)
-# 
-# HH10_11$indidy1 <- HH10_11$HHID <- NULL
-# HH13$indidy2 <- NULL
-# 
-# keep <- intersect(names(HH10_11), names(HH13))
-# 
-# HH10_11 <- HH10_11[, keep]
-# HH13 <- HH13[, keep]
-# names(HH13)[-1] <- paste0(names(HH13)[-1], ".2")
-# 
-# test <- full_join(HH10_11, HH13)
-# 
-# table(test$sex == test$sex.2 ) # seems likely the same
-# 
-# # ages tend to be three apart
-
 # source all the files that will be used to build the panel
 
 # output
@@ -92,29 +60,25 @@ source(file.path(filePath, "location_MWI_2013R.r"))
 
 # join in each year first
 # wave 1
-cross_section10_11 <- left_join(location, HH10_11)
-cross_section10_11 <- left_join(oput_2010_11, plotRS_2010_11)
-cross_section10_11 <- left_join(cross_section10_11, areas10_11)
-cross_section10_11 <- left_join(cross_section10_11, lab2010_11)
-cross_section10_11 <- left_join(cross_section10_11, HH10_11)
+cross_section10_11 <- left_join(unique(location10_11), unique(HH10_11))
+cross_section10_11 <- left_join(cross_section10_11, unique(oput_2010_11))
+cross_section10_11 <- left_join(cross_section10_11, unique(plotRS_2010_11))
+cross_section10_11 <- left_join(cross_section10_11, unique(areas10_11))
+cross_section10_11 <- left_join(cross_section10_11, unique(lab2010_11))
+
 cross_section10_11$year <- 2011
 
 # wave 2
-cross_section13 <- left_join(oput2013, plotRS_2013)
-cross_section13 <- left_join(cross_section13, areas13)
-cross_section13 <- left_join(cross_section13, lab2013)
-cross_section13 <- left_join(cross_section13, HH13)
-cross_section10_11$year <- 2013
+cross_section13 <- left_join(unique(location13), unique(HH13))
+cross_section13 <- left_join(cross_section13, unique(oput2013))
+cross_section13 <- left_join(cross_section13, unique(plotRS_2013))
+cross_section13 <- left_join(cross_section13, unique(areas13))
+cross_section13 <- left_join(cross_section13, unique(lab2013))
+cross_section13$year <- 2013
 
-# Now change the household ids as described above
-cross_section10_11$hhid <- str_pad(cross_section10_11$HHID, 4, pad = "0")
-cross_section13$hhid <- sapply(strsplit(cross_section13$y2_hhid, "-"),
-                               function(i) i[1])
-
-cross_section10_11 <- select(cross_section10_11, hhid, everything())
-cross_section13 <- select(cross_section13, hhid, everything())
 
 # 
 keep <- intersect(names(cross_section10_11), names(cross_section13))
 panel <- rbind(cross_section10_11[, keep], cross_section13[, keep])
 panel$plotnum <- NULL
+panel <- select(panel, HHID, case_id, ea_id, year, everything())
