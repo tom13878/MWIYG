@@ -16,7 +16,7 @@ if(Sys.info()["user"] == "Tomas"){
 
 
 HH10_11 <- read_dta(file.path(dataPath, "Household/HH_MOD_B.dta")) %>%
-  select(HHID, y1_hhid=case_id, indidy1 = PID, status=hh_b04, sex=hh_b03,
+  select(HHID, case_id, indidy1 = PID, status=hh_b04, sex=hh_b03,
          yob=hh_b06b, age=hh_b05a, hh_b11, years=hh_b12)
 
 HH10_11$years <- as.numeric(HH10_11$years)
@@ -38,7 +38,7 @@ HH10_11$cage <- cut(HH10_11$age, breaks = c(0, 15, 55, max(HH10_11$age, na.rm=TR
 # between the ages of 15 and 55
 
 education <- read_dta(file.path(dataPath, "Household/HH_MOD_C.dta")) %>%
-  select(HHID, y1_hhid=case_id, indidy1=PID, education_any=hh_c06, start=hh_c10,
+  select(HHID, case_id, indidy1=PID, education_any=hh_c06, start=hh_c10,
          end=hh_c15, atSchool=hh_c13)
 
 education$education_any <- as_factor(education$education_any) # ever went to school
@@ -58,7 +58,7 @@ HH10_11$education <- ifelse(HH10_11$education < 0, NA, HH10_11$education)
 # of household members 15-55 and number of
 # household members 15:55
 
-HH10_11_x <- group_by(HH10_11, HHID, y1_hhid) %>%
+HH10_11_x <- group_by(HH10_11, HHID, case_id) %>%
   summarise(education1555=sum(education[cage %in% "16-55"], na.rm=T),
             N1555=sum(cage %in% "16-55"))
 HH10_11 <- left_join(HH10_11, HH10_11_x); rm(HH10_11_x)
@@ -71,7 +71,7 @@ HH10_11 <- filter(HH10_11, status == "Head") %>% select(-status, -cage)
 # -------------------------------------
 
 death <- read_dta(file.path(dataPath, "Household/HH_MOD_W.dta")) %>%
-  select(HHID, y1_hhid = case_id, hh_w01) %>% group_by(HHID, y1_hhid) %>%
+  select(HHID, case_id, hh_w01) %>% group_by(HHID, case_id) %>%
   summarise(death = ifelse(any(hh_w01 %in% 1), 1, 0))
 
 HH10_11 <- left_join(HH10_11, death)
