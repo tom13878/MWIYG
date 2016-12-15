@@ -10,6 +10,10 @@ if(Sys.info()["user"] == "Tomas"){
   dataPath <- "C:/Users/Tomas/Documents/LEI/data"
 }
 
+# packages
+library(dplyr)
+library(haven)
+
 # winsor code
 source("C:/Users/Tomas/Documents/LEI/functions/winsor.R")
 
