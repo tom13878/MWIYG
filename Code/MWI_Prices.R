@@ -14,7 +14,7 @@ source("C:/Users/Tomas/Documents/LEI/functions/winsor.R")
 
 # load pooled data
 source("c:/users/tomas/documents/lei/MWIYG/Code/panel_MWI.R")
-dbP <- panel
+dbP <- maize
 
 if(Sys.info()["user"] == "Tomas"){
   dataPath <- "C:/Users/Tomas/Documents/LEI/data"
@@ -219,9 +219,21 @@ regPrice <- bind_rows(fertMarPrice, maizePrice) %>% ungroup
 
 # Create price file at plot level.
 # Again, we winsor the prices for each type of price and per surveyyear
-plotPrice <- select(dbP, hhid, plotid, ZONE, REGNAME, DISNAME, surveyyear, Pn = WPn, Pc = crop_price) %>%
+plotPrice <- select(dbP, surveyyear, region, district, HHID, case_id, ea_id, plotnum, maize_type, Pn = WPn, Pc = crop_price) %>%
   gather(type, plotPrice, Pn, Pc) %>%
   mutate(plotPrice = ifelse(plotPrice == 0, NA, plotPrice)) %>% # remove one value with zero price
   group_by(type, surveyyear) %>%
   mutate(plotPrice =winsor2(plotPrice)) %>%
   ungroup() %>% unique
+
+
+names(regPrice)[1:2] <- c("region", "district")
+# Substitute regional prices when plot level price is not available
+price <- left_join(plotPrice, regPrice) %>%
+  # filter(!(hhid == "310014" & plotid == 1)) %>% # CHECK WHY THIS ONE IS DUPLICATE
+  unique() %>% # should not be necessary but never know
+  mutate(price = ifelse(is.na(plotPrice), regPrice, plotPrice)) %>%
+  select(-source, -regPrice, -plotPrice, -product) %>%
+  unique() %>%
+  spread(type, price) %>%
+  do(filter(., complete.cases(.))) # CHECK WHY SOME PLOTS DO NOT HAVE A ZONE, ETC
