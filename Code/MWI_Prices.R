@@ -217,4 +217,11 @@ rm(fpCountry, fpRegion, fpDistrict)
 # into main database, before panel
 regPrice <- bind_rows(fertMarPrice, maizePrice) %>% ungroup
 
-
+# Create price file at plot level.
+# Again, we winsor the prices for each type of price and per surveyyear
+plotPrice <- select(dbP, hhid, plotid, ZONE, REGNAME, DISNAME, surveyyear, Pn = WPn, Pc = crop_price) %>%
+  gather(type, plotPrice, Pn, Pc) %>%
+  mutate(plotPrice = ifelse(plotPrice == 0, NA, plotPrice)) %>% # remove one value with zero price
+  group_by(type, surveyyear) %>%
+  mutate(plotPrice =winsor2(plotPrice)) %>%
+  ungroup() %>% unique
