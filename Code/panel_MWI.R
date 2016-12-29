@@ -21,7 +21,10 @@ library(stringr)
 if(Sys.info()["user"] == "Tomas"){
   filePath <- "C:/Users/Tomas/Documents/LEI/MWIYG/Code"}
 
-# source all the files that will be used to build the panel
+# -------------------------------------
+# source all the files that will be used
+# to build the panel
+# -------------------------------------
 
 # output
 source(file.path(filePath, "output_MWI_2010_11.R"))
@@ -39,9 +42,21 @@ source(file.path(filePath, "plot_areas_MWI_2013.R"))
 source(file.path(filePath, "labour_MWI_2010_11.R"))
 source(file.path(filePath, "labour_MWI_2013.R"))
 
+# asset variables
+source(file.path(filePath, "assets_MWI_2010_11.R"))
+source(file.path(filePath, "assets_MWI_2013.R"))
+
+# income variables
+# source(file.path(filePath, "income_MWI_2010_11.R"))
+# source(file.path(filePath, "labour_MWI_2013.R"))
+
 # household information
 source(file.path(filePath, "household_MWI_2010_11.r"))
 source(file.path(filePath, "household_MWI_2013.r"))
+
+# community information
+source(file.path(filePath, "community_MWI_2010_11.r"))
+source(file.path(filePath, "community_MWI_2013.r"))
 
 # location variables
 source(file.path(filePath, "location_MWI_2010_11.r"))
@@ -93,6 +108,9 @@ panel <- select(panel, HHID, case_id, ea_id, surveyyear, plotnum, everything())
 # 
 # these three may have different properties
 # and they confuse the MWI_prices file
+# therefore we make a new variable for 
+# maize type and we create a maize only
+# panel
 # -------------------------------------
 
 # select maize plots
