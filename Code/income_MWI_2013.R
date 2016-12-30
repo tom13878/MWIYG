@@ -1,6 +1,6 @@
 # -------------------------------------
-#' Income variables for Malawi wave 1
-#' (2010-11). Information on income can be
+#' Income variables for Malawi wave 2
+#' (2013). Information on income can be
 #' found in the following sections of the
 #' questionnaire:
 #' 
@@ -28,6 +28,10 @@
 #' 2: maize composite
 #' 3: maize hybrid
 #' 4: maize hybrid recycled
+#' 
+#' Note: in rainy season plot numbers
+#' are R0*, in dry season plot numbers
+#' are D0*
 # -------------------------------------
 
 # load packages
@@ -37,9 +41,9 @@ library(tidyr)
 
 # set working directory
 if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2010_11/Data"
+  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2013/Data"
 } else {
-  dataPath <- "W:/LEI/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2010_11/Data"
+  dataPath <- "W:/LEI/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
 }
 
 # -------------------------------------
@@ -60,7 +64,7 @@ if(Sys.info()["user"] == "Tomas"){
 
 # select all income variables
 off_farm_income <- read_dta(file.path(dataPath, "Household/HH_MOD_E.dta")) %>%
-  select(HHID, case_id, PID,
+  select(y2_hhid, PID,
          mj_industry=hh_e20b, mj_employer=hh_e21,
          mj_months=hh_e22, mj_weekspm=hh_e23,
          mj_hourspw=hh_e24,mj_wage=hh_e25,
@@ -83,16 +87,16 @@ table(as_factor(off_farm_income$mj_grat_pay_period)) # mostly day
 table(as_factor(off_farm_income$sj_pay_period)) # mostly day
 table(as_factor(off_farm_income$sj_grat_pay_period)) # mostly day
 
-off_farm_income <- select(off_farm_income, HHID, case_id, PID,
+off_farm_income <- select(off_farm_income, y2_hhid, PID,
                           ganyu, ganyu_months, ganyu_weekspm,
                           ganyu_dayspw, ganyu_wagepd) %>%
-  transmute(HHID, case_id, PID, ganyu,
+  transmute(y2_hhid, PID, ganyu,
             ganyu_income = ganyu_months * ganyu_weekspm * ganyu_dayspw * ganyu_wagepd)
 
 off_farm_income$ganyu <- ifelse(off_farm_income$ganyu %in% 1, 1,
-                          ifelse(off_farm_income$ganyu %in% 2, 0, NA))
+                                ifelse(off_farm_income$ganyu %in% 2, 0, NA))
 
-off_farm_income_hh <- group_by(off_farm_income, HHID, case_id) %>%
+off_farm_income_hh <- group_by(off_farm_income, y2_hhid) %>%
   summarise(ganyu_income_hh=sum(ganyu_income, na.rm=TRUE))
 rm(off_farm_income)
 
@@ -101,10 +105,10 @@ rm(off_farm_income)
 # -------------------------------------
 
 off_farm_income_other <- read_dta(file.path(dataPath, "Household/HH_MOD_P.dta")) %>%
-  select(HHID, case_id, code=hh_p0a, income_other=hh_p02)
+  select(y2_hhid, code=hh_p0a, income_other=hh_p02)
 
 # summarise to the household level
-off_farm_income_other <- group_by(off_farm_income_other, HHID, case_id) %>%
+off_farm_income_other <- group_by(off_farm_income_other, y2_hhid) %>%
   summarise(income_other=sum(income_other, na.rm=TRUE))
 
 # -------------------------------------
@@ -121,13 +125,13 @@ off_farm_income_other <- group_by(off_farm_income_other, HHID, case_id) %>%
 
 # crop production from the rainy season of 2010_11
 cropRS <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_I.dta")) %>%
-  select(HHID, case_id, crop_code = ag_i0b,
+  select(y2_hhid, crop_code = ag_i0b,
          qty_harv = ag_i02a, unit = ag_i02b,
          condition = ag_i02c, crop_value = ag_i03)
 
 # crop production from the dry season of 2010_11
 cropDS <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_O.dta")) %>%
-  select(HHID, case_id, crop_code = ag_o0b,
+  select(y2_hhid, crop_code = ag_o0b,
          qty_harv = ag_o02a, unit = ag_o02b,
          condition = ag_o02c, crop_value = ag_o03)
 
@@ -137,27 +141,27 @@ crop <- rbind(cropRS, cropDS)
 # calculate the full value of crops
 # per household
 
-on_farm_income_crop <- group_by(crop, HHID, case_id) %>%
+on_farm_income_crop <- group_by(crop, y2_hhid) %>%
   summarise(crop_value_hh=sum(crop_value, na.rm=TRUE))
 rm(crop, cropRS, cropDS)
 
 # tree crops
 tree <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_Q.dta")) %>%
-  select(HHID, case_id, tree_value=ag_q03)
+  select(y2_hhid, tree_value=ag_q03)
 
 # summarise to the household level
-on_farm_income_tree <- group_by(tree, HHID, case_id) %>%
+on_farm_income_tree <- group_by(tree, y2_hhid) %>%
   summarise(tree_value_hh=sum(tree_value, na.rm=TRUE))
 
 # rent on land rainy season
 rentRS <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_D.dta")) %>%
-  select(HHID, case_id, plot_id=ag_d00, rent_cash_rec = ag_d19a,
+  select(y2_hhid, plot_id=ag_d00, rent_cash_rec = ag_d19a,
          rent_in_kind_rec = ag_d19b, rent_cash_later=ag_d19c,
          rent_in_kind_later=ag_d19d)
 
 # rent on land dry season
 rentDS <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_K.dta")) %>%
-  select(HHID, case_id, plot_id=ag_k0a, rent_cash_rec = ag_k20a,
+  select(y2_hhid, plot_id=ag_k00, rent_cash_rec = ag_k20a,
          rent_in_kind_rec = ag_k20b, rent_cash_later=ag_k20c,
          rent_in_kind_later=ag_k20d)
 
@@ -173,7 +177,7 @@ miss <- with(rent,
 rent$rent[miss] <- NA; rm(miss)
 
 # summarise to the household level
-on_farm_income_rent <- group_by(rent, HHID, case_id) %>%
+on_farm_income_rent <- group_by(rent, y2_hhid) %>%
   summarise(rent_value_hh=sum(rent, na.rm=TRUE))
 rm(rent)
 
@@ -189,10 +193,10 @@ rm(rent)
 
 # lvstock sales
 lvstock_sales <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_R1.dta")) %>%
-  select(HHID, case_id, lvstock_sales_value=ag_r17)
+  select(y2_hhid, lvstock_sales_value=ag_r17)
 
 # summarise at the household level
-on_farm_income_lvstock_sales <- group_by(lvstock_sales, HHID, case_id) %>%
+on_farm_income_lvstock_sales <- group_by(lvstock_sales, y2_hhid) %>%
   summarise(lvstock_sales_value_hh=sum(lvstock_sales_value, na.rm=TRUE))
 
 # -------------------------------------
@@ -200,10 +204,10 @@ on_farm_income_lvstock_sales <- group_by(lvstock_sales, HHID, case_id) %>%
 # -------------------------------------
 
 lvstck_products <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_S.dta")) %>%
-  select(HHID, case_id, lvstck_prod_value=ag_s06)
+  select(y2_hhid, lvstck_prod_value=ag_s06)
 
 # summarise at the household level
-on_farm_income_lvstock_products <- group_by(lvstck_products, HHID, case_id) %>%
+on_farm_income_lvstock_products <- group_by(lvstck_products, y2_hhid) %>%
   summarise(lvstock_prod_value_hh=sum(lvstck_prod_value, na.rm=TRUE))
 
 
@@ -211,15 +215,15 @@ on_farm_income_lvstock_products <- group_by(lvstck_products, HHID, case_id) %>%
 # Total household income Malawi 2013
 # -------------------------------------
 
-income_2010_11 <- full_join(off_farm_income_hh, off_farm_income_other)
-income_2010_11 <- full_join(income_2010_11, on_farm_income_crop)
-income_2010_11 <- full_join(income_2010_11, on_farm_income_tree)
-income_2010_11 <- full_join(income_2010_11, on_farm_income_lvstock_sales)
-income_2010_11 <- full_join(income_2010_11, on_farm_income_lvstock_products)
-income_2010_11 <- full_join(income_2010_11, on_farm_income_rent)
+income_2013 <- full_join(off_farm_income_hh, off_farm_income_other)
+income_2013 <- full_join(income_2013, on_farm_income_crop)
+income_2013 <- full_join(income_2013, on_farm_income_tree)
+income_2013 <- full_join(income_2013, on_farm_income_lvstock_sales)
+income_2013 <- full_join(income_2013, on_farm_income_lvstock_products)
+income_2013 <- full_join(income_2013, on_farm_income_rent)
 
 # calculate a total income variable
-income_2010_11$income <- with(income_2010_11,
+income_2013$income <- with(income_2013,
                            rowSums(cbind(ganyu_income_hh, income_other,
                                          crop_value_hh, tree_value_hh,
                                          lvstock_sales_value_hh,
