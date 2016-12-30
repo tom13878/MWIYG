@@ -7,6 +7,7 @@
 library(dplyr)
 library(haven)
 library(tidyr)
+library(reshape2)
 
 # set working directory
 if(Sys.info()["user"] == "Tomas"){
