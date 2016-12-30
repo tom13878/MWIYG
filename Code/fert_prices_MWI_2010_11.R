@@ -52,11 +52,11 @@ fert_prices_2$unit2kg <- NULL
 # MWI survey which are not in our conversion file.
 # These need to be sorted into something we can work with
 
-fert_prices1011 <- bind_rows(fert_prices_1, fert_prices_2)
-fert_prices1011$typ <- ifelse(fert_prices1011$typ %in% c("23:21:0+4", "23:21:0+4S", "23:21:0+4S/CHITOWE"),
-                   "NPK (MWI)", fert_prices1011$typ)
-fert_prices1011$typ <- ifelse(fert_prices1011$typ %in% c("D.COMPOUND", "D COMPOUND"), "D compound", fert_prices1011$typ)
-fert_prices1011 <- filter(fert_prices1011, typ %in% c("D COMPOUND", "DAP", "CAN",
+fert_prices_2010_11 <- bind_rows(fert_prices_1, fert_prices_2)
+fert_prices_2010_11$typ <- ifelse(fert_prices_2010_11$typ %in% c("23:21:0+4", "23:21:0+4S", "23:21:0+4S/CHITOWE"),
+                   "NPK (MWI)", fert_prices_2010_11$typ)
+fert_prices_2010_11$typ <- ifelse(fert_prices_2010_11$typ %in% c("D.COMPOUND", "D COMPOUND"), "D compound", fert_prices_2010_11$typ)
+fert_prices_2010_11 <- filter(fert_prices_2010_11, typ %in% c("D COMPOUND", "DAP", "CAN",
                                 "UREA", "NPK (MWI)"))
 
 # provide a nitrogen component value for npk and urea
@@ -64,7 +64,7 @@ conv <- read.csv(file.path(dataPath,"../../../Other/Fertilizer/Fert_comp.csv")) 
   transmute(typ=Fert_type2, n=N_share/100, p=P_share/100)
 
 # join the fertilizer information with the conversion
-fert_prices1011 <- left_join(fert_prices1011, conv) %>%
+fert_prices_2010_11 <- left_join(fert_prices_2010_11, conv) %>%
   mutate(Vfert=valu/qty,
          Qn=qty*n,
          Qp=qty*p,
@@ -72,9 +72,8 @@ fert_prices1011 <- left_join(fert_prices1011, conv) %>%
 
 # need to make a weighted price somehow to get prices at
 # the household level
-fert_prices1011 <- group_by(fert_prices1011, HHID, case_id) %>%
-  summarise(N = sum(Qn, na.rm=TRUE),
-         WPn = sum((Qn/N) * price, na.rm=TRUE))
+fert_prices_2010_11 <- group_by(fert_prices_2010_11, HHID, case_id) %>%
+  summarise(WPn = sum((Qn/sum(Qn, na.rm=TRUE)) * price, na.rm=TRUE))
 
 # take out trash
 rm(conv, dataPath, fert_prices_1, fert_prices_2)  

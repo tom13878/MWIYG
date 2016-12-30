@@ -52,12 +52,12 @@ fert_prices_2$unit2kg <- NULL
 # MWI survey which are not in our conversion file.
 # These need to be sorted into something we can work with
 
-fert_prices13 <- bind_rows(fert_prices_1, fert_prices_2)
-fert_prices13$typ <- ifelse(fert_prices13$typ %in% c("23:21:0+4", "23:21:0+4S", "23:21:0+4S/CHITOWE", "N.P.K"),
-                          "NPK (MWI)", fert_prices13$typ)
-fert_prices13$typ <- ifelse(fert_prices13$typ %in% c("D.COMPOUND", "D COMPOUND", "D. COMPOUND", "D-COMPOUND", "D COUPOUND"),
-                          "D compound", fert_prices13$typ)
-fert_prices13 <- filter(fert_prices13, typ %in% c("D COMPOUND", "DAP", "CAN",
+fert_prices_2013 <- bind_rows(fert_prices_1, fert_prices_2)
+fert_prices_2013$typ <- ifelse(fert_prices_2013$typ %in% c("23:21:0+4", "23:21:0+4S", "23:21:0+4S/CHITOWE", "N.P.K"),
+                          "NPK (MWI)", fert_prices_2013$typ)
+fert_prices_2013$typ <- ifelse(fert_prices_2013$typ %in% c("D.COMPOUND", "D COMPOUND", "D. COMPOUND", "D-COMPOUND", "D COUPOUND"),
+                          "D compound", fert_prices_2013$typ)
+fert_prices_2013 <- filter(fert_prices_2013, typ %in% c("D COMPOUND", "DAP", "CAN",
                                               "UREA", "NPK (MWI)"))
 
 # provide a nitrogen component value for npk and urea
@@ -65,7 +65,7 @@ conv <- read.csv(file.path(dataPath,"../../../Other/Fertilizer/Fert_comp.csv")) 
   transmute(typ=Fert_type2, n=N_share/100, p=P_share/100)
 
 # join the fertilizer information with the conversion
-fert_prices13 <- left_join(fert_prices13, conv) %>%
+fert_prices_2013 <- left_join(fert_prices_2013, conv) %>%
   mutate(Vfert=valu/qty,
          Qn=qty*n,
          Qp=qty*p,
@@ -73,9 +73,8 @@ fert_prices13 <- left_join(fert_prices13, conv) %>%
 
 # need to make a weighted price somehow to get prices at
 # the household level
-fert_prices13 <- group_by(fert_prices13, y2_hhid) %>%
-  summarise(N = sum(Qn, na.rm=TRUE),
-            WPn = sum((Qn/N) * price, na.rm=TRUE))
+fert_prices_2013 <- group_by(fert_prices_2013, y2_hhid) %>%
+  summarise(WPn = sum((Qn/sum(Qn, na.rm=TRUE)) * price, na.rm=TRUE))
 
 
 # take out trash
