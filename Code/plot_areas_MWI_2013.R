@@ -18,18 +18,18 @@ if(Sys.info()["user"] == "Tomas"){
 # wave 2 questionnaire. Some plots were not measured
 # but only 8%.
 
-areas13 <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_B1.dta")) %>%  
+areas_2013 <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_B1.dta")) %>%  
   select(y2_hhid, plotnum=ag_b100a,
          area_farmer=ag_b104a, areas_farmer_unit = ag_b104b,
          area_gps=ag_b104c)
 
 # some self reported measurements are in acres and m2
 # change to hectares
-areas13$area_farmer <- ifelse(areas13$areas_farmer_unit %in% 1,
-                            areas13$area_farmer * 0.404685642,
-                            ifelse(areas13$areas_farmer_unit %in% 3,
-                                   areas13$area_farmer * 0.0001, NA))
+areas_2013$area_farmer <- ifelse(areas_2013$areas_farmer_unit %in% 1,
+                            areas_2013$area_farmer * 0.404685642,
+                            ifelse(areas_2013$areas_farmer_unit %in% 3,
+                                   areas_2013$area_farmer * 0.0001, NA))
 
-areas13$areas_farmer_unit <- NULL
+areas_2013$areas_farmer_unit <- NULL
 
 rm(dataPath)
