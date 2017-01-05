@@ -47,8 +47,8 @@ source(file.path(filePath, "assets_MWI_2010_11.R"))
 source(file.path(filePath, "assets_MWI_2013.R"))
 
 # income variables
-# source(file.path(filePath, "income_MWI_2010_11.R"))
-# source(file.path(filePath, "labour_MWI_2013.R"))
+source(file.path(filePath, "income_MWI_2010_11.R"))
+source(file.path(filePath, "income_MWI_2013.R"))
 
 # household information
 source(file.path(filePath, "household_MWI_2010_11.r"))
@@ -73,29 +73,33 @@ source(file.path(filePath, "fert_prices_MWI_2013.r"))
 # -------------------------------------
 
 # wave 1
-cross_section10_11 <- left_join(unique(location10_11), unique(HH10_11))
-cross_section10_11 <- left_join(cross_section10_11, unique(fert_prices1011))
-cross_section10_11 <- left_join(cross_section10_11, unique(oput_2010_11))
-cross_section10_11 <- left_join(cross_section10_11, unique(plotRS_2010_11))
-cross_section10_11 <- left_join(cross_section10_11, unique(areas10_11))
-cross_section10_11 <- left_join(cross_section10_11, unique(lab2010_11))
-cross_section10_11$surveyyear <- 2011
+cross_section_2010_11 <- left_join(household_2010_11, location_2010_11)
+cross_section_2010_11 <- left_join(cross_section_2010_11, income_2010_11)
+cross_section_2010_11 <- left_join(cross_section_2010_11, assets_2010_11)
+cross_section_2010_11 <- left_join(cross_section_2010_11, fert_prices_2010_11)
+cross_section_2010_11 <- left_join(cross_section_2010_11, oput_2010_11) # duplicates
+cross_section_2010_11 <- left_join(cross_section_2010_11, unique(plotRS_2010_11))
+cross_section_2010_11 <- left_join(cross_section_2010_11, unique(areas_2010_11))
+cross_section_2010_11 <- left_join(cross_section_2010_11, unique(lab_2010_11))
+cross_section_2010_11$surveyyear <- 2011
 
 # wave 2
-cross_section13 <- left_join(unique(location13), unique(HH13))
-cross_section13 <- left_join(cross_section13, unique(fert_prices13))
-cross_section13 <- left_join(cross_section13, unique(oput_2013))
-cross_section13 <- left_join(cross_section13, unique(plotRS_2013))
-cross_section13 <- left_join(cross_section13, unique(areas13))
-cross_section13 <- left_join(cross_section13, unique(lab2013))
-cross_section13$surveyyear <- 2013
+cross_section_2013 <- left_join(household_2013, location_2013)
+cross_section_2013 <- left_join(cross_section_2013, income_2013)
+cross_section_2013 <- left_join(cross_section_2013, assets_2013)
+cross_section_2013 <- left_join(cross_section_2013, fert_prices_2013)
+cross_section_2013 <- left_join(cross_section_2013, oput_2013) # duplicates
+cross_section_2013 <- left_join(cross_section_2013, unique(plotRS_2013))
+cross_section_2013 <- left_join(cross_section_2013, unique(areas_2013))
+cross_section_2013 <- left_join(cross_section_2013, unique(lab_2013))
+cross_section_2013$surveyyear <- 2013
 
 # -------------------------------------
 # link the panel
 # -------------------------------------
 
-keep <- intersect(names(cross_section10_11), names(cross_section13))
-panel <- rbind(cross_section10_11[, keep], cross_section13[, keep])
+keep <- intersect(names(cross_section_2010_11), names(cross_section_2013))
+panel <- rbind(cross_section_2010_11[, keep], cross_section_2013[, keep])
 panel <- select(panel, HHID, case_id, ea_id, surveyyear, plotnum, everything())
 
 # -------------------------------------

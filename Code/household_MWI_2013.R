@@ -1,5 +1,6 @@
 # -------------------------------------
 # Household Information MWI 2013
+# no ea_id variable for 2013
 # -------------------------------------
 
 # load packages

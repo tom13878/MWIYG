@@ -16,7 +16,7 @@ if(Sys.info()["user"] == "Tomas"){
 library(haven)
 library(dplyr)
 
-
+# crop output
 oput_2010_11 <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_G.dta")) %>%
   select(HHID, case_id, ea_id, plotnum=ag_g0b, crop_code=ag_g0d,
          crop_stand=ag_g01, crop_share=ag_g03, harv_start = ag_g12a,
@@ -83,27 +83,27 @@ oput_2010_11$unit <- oput_2010_11$shell_unshelled <- oput_2010_11$conversion <-
 # 6. pea: code 46
 # 7. paprika: code 47
 
-fruit <- c(5, 6, 7, 9, 10, 11, 12, 13, 14)
-cash_crop_perm <- c(36, 39, 16)  # permanent cash crops
-ctr <- c(17, 18, 19, 20, 21, 22, 23,
-         24, 25, 26, 28, 29, 31, 32, 33, 45) # Cereals, Tubers, Roots
-cash_crop_nperm <- c(37) # non permanent cash crops
-vegetables <- c(40, 44)
-legumes <- c(11, 12, 13, 14, 15, 16, 34, 35, 38)
-
-
-oput_2010_11_x <- group_by(oput_2010_11, HHID, case_id, plotnum) %>%
-  summarise(crop_count=length(unique(crop_code[!is.na(crop_code)])),
-            fruit=ifelse(any(crop_code %in% fruit), 1, 0),
-            cash_crops_perm=ifelse(any(crop_code %in% cash_crop_perm), 1, 0),
-            ctr=ifelse(any(crop_code %in% ctr), 1, 0),
-            cash_crop_nperm=ifelse(any(crop_code %in% cash_crop_nperm), 1, 0),
-            vegetables=ifelse(any(crop_code %in% vegetables), 1, 0),
-            legume=ifelse(any(crop_code %in% legumes), 1, 0),
-            maize_=ifelse(any(crop_code %in% c(1, 2, 3, 4)), 1, 0), # maize has crop code 1, 2, 3 or 4
-            wheat=ifelse(any(crop_code %in% 30), 1, 0)) # wheat has crop code 30
-
-oput_2010_11 <- left_join(oput_2010_11, oput_2010_11_x); rm(oput_2010_11_x)
+# fruit <- c(5, 6, 7, 9, 10, 11, 12, 13, 14)
+# cash_crop_perm <- c(36, 39, 16)  # permanent cash crops
+# ctr <- c(17, 18, 19, 20, 21, 22, 23,
+#          24, 25, 26, 28, 29, 31, 32, 33, 45) # Cereals, Tubers, Roots
+# cash_crop_nperm <- c(37) # non permanent cash crops
+# vegetables <- c(40, 44)
+# legumes <- c(11, 12, 13, 14, 15, 16, 34, 35, 38)
+# 
+# 
+# oput_2010_11_x <- group_by(oput_2010_11, HHID, case_id, plotnum) %>%
+#   summarise(crop_count=length(unique(crop_code[!is.na(crop_code)])),
+#             fruit=ifelse(any(crop_code %in% fruit), 1, 0),
+#             cash_crops_perm=ifelse(any(crop_code %in% cash_crop_perm), 1, 0),
+#             ctr=ifelse(any(crop_code %in% ctr), 1, 0),
+#             cash_crop_nperm=ifelse(any(crop_code %in% cash_crop_nperm), 1, 0),
+#             vegetables=ifelse(any(crop_code %in% vegetables), 1, 0),
+#             legume=ifelse(any(crop_code %in% legumes), 1, 0),
+#             maize_=ifelse(any(crop_code %in% c(1, 2, 3, 4)), 1, 0), # maize has crop code 1, 2, 3 or 4
+#             wheat=ifelse(any(crop_code %in% 30), 1, 0)) # wheat has crop code 30
+# 
+# oput_2010_11 <- left_join(oput_2010_11, oput_2010_11_x); rm(oput_2010_11_x)
 
 # who responded they produced zero crop, or did not respond (NA)
 # and wok out how to get the prices information. Prices will be
@@ -115,9 +115,9 @@ oput_2010_11 <- left_join(oput_2010_11, oput_2010_11_x); rm(oput_2010_11_x)
 # converted as above
 
 crop_unit_priceRS <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_I.dta")) %>%
-  select(HHID, case_id, crop_code = ag_i0b,
+  select(HHID, case_id, ea_id, crop_code = ag_i0b,
          qty_harv = ag_i02a, unit = ag_i02b,
-         condition = ag_i02c, crop_value = ag_i03)
+         condition = ag_i02c, crop_value = ag_i03) %>% unique()
 
 # Join with region and then conversion factor
 crop_unit_priceRS <- left_join(crop_unit_priceRS, region)
@@ -126,10 +126,11 @@ crop_unit_priceRS <- left_join(crop_unit_priceRS, qty2kg)
 # make conversion and calculate the crop prices
 crop_unit_priceRS$qty_harv <- crop_unit_priceRS$qty_harv * crop_unit_priceRS$conversion
 crop_unit_priceRS$crop_price <- crop_unit_priceRS$crop_value/crop_unit_priceRS$qty_harv
-crop_unit_priceRS <- select(crop_unit_priceRS, HHID, case_id, crop_code, crop_value, qty_harv, crop_price)
+crop_unit_priceRS <- select(crop_unit_priceRS, HHID, case_id, ea_id, crop_code, crop_value, qty_harv, crop_price)
 
 # join prices with output
-oput_2010_11 <- left_join(oput_2010_11, crop_unit_priceRS)
+oput_2010_11_2 <- left_join(oput_2010_11,
+                          crop_unit_priceRS)
 
 # if someone either did not have any output or
 # had 0 output remove them from the data frame
