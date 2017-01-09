@@ -153,7 +153,7 @@ lab <- full_join(labHH_RS_prep, labHH_RS_WF) %>%
 # 3. all hired labour in days
 # 4. the sum of household and hired labour
 
-lab2013 <- transmute(lab, y2_hhid, plotnum,
+lab_2013 <- transmute(lab, y2_hhid, plotnum,
                  labHH_hrs = labHH_prep_hrs + labHH_WF_hrs + labHH_harv_hrs,
                  labHH_days = labHH_prep_days + labHH_WF_days + labHH_harv_days,
                  labHire_days = labHire_non_harv + labHire_harv,

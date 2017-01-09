@@ -1,11 +1,13 @@
 ---
 title: "Malawi Dataset"
 author: "Tomas Morley"
-date: "22 November 2016"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: pdf_document
 ---
 
 This document describes the LSMS-ISA data for Malawi across two survey waves (2010 - 11, and 2013)
+
+# rainy season vs dry season
 
 # Plot level variables
 
@@ -30,9 +32,14 @@ OTHER (SPECIFY)
 
 # fertilizer prices
 
-- not joined to the main dataframe.
+- not joined to the main dataframe for prices
 
 # pesticide
 
 - pesticide variables ignore type of 
-persticide -> herbicide etc
+persticide -> herbicide etc, all just seen as one variable
+
+# household info
+
+education module c no question 10 for school start date
+No module W in wave 2?? -> no death variables

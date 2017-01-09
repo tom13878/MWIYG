@@ -1,11 +1,5 @@
 # -------------------------------------
 #' Plot areas Malawi wave 1 (2010 - 11)
-#'
-# ------------------------------------- 
-
-# -------------------------------------
-#' Plot areas Malawi wave 1 (2010_11)
-#'
 # ------------------------------------- 
 
 # load packages
@@ -24,11 +18,11 @@ if(Sys.info()["user"] == "Tomas"){
 # as some plots did not have a gps measurement. Measurements appear
 # to be in hectacres
 
-areas10_11 <- read_dta(file.path(dataPath, "areas_mwi_y1_imputed.dta")) %>%  
+areas_2010_11 <- read_dta(file.path(dataPath, "areas_mwi_y1_imputed.dta")) %>%  
   select(case_id, plotnum,
          area_farmer=area_sr, area_gps=area_gps_mi_50)
 
-areas10_11$area_gps <- ifelse(areas10_11$area_gps %in% 0, NA, areas10_11$area_gps)
+areas_2010_11$area_gps <- ifelse(areas_2010_11$area_gps %in% 0, NA, areas_2010_11$area_gps)
 
 rm(dataPath)
 

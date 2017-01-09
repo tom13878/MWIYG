@@ -15,9 +15,11 @@ if(Sys.info()["user"] == "Tomas"){
 }
 
 
-location13 <- read_dta(file.path(dataPath, "Household/HH_MOD_A_FILT.dta")) %>%
+location_2013 <- read_dta(file.path(dataPath, "Household/HH_MOD_A_FILT.dta")) %>%
   select(y2_hhid, HHID, case_id, ea_id, region, district)
-location13$region <- with(location13,
+location_2013$region <- with(location_2013,
                           ifelse(region == 1, "NORTHERN",
                                  ifelse(region == 2, "CENTRAL",
                                         "SOUTHERN")))
+
+rm(dataPath)

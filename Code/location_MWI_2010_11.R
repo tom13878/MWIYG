@@ -15,7 +15,7 @@ if(Sys.info()["user"] == "Tomas"){
 }
 
 
-location10_11 <- read_dta(file.path(dataPath, "Household/HH_MOD_A_FILT.dta")) %>%
+location_2010_11 <- read_dta(file.path(dataPath, "Household/HH_MOD_A_FILT.dta")) %>%
   transmute(HHID, case_id, ea_id, region=NA, district = hh_a01)
 
 # there are three regions in Malawi:
@@ -23,7 +23,7 @@ location10_11 <- read_dta(file.path(dataPath, "Household/HH_MOD_A_FILT.dta")) %>
 # number of the district code tels us which
 # is which
 
-location10_11$region <- with(location10_11,
+location_2010_11$region <- with(location_2010_11,
                              ifelse(district < 200, "NORTHERN",
                                     ifelse(district >=200 & district < 300, "CENTRAL",
                                            "SOUTHERN")))
