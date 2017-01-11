@@ -9,7 +9,7 @@
 if(Sys.info()["user"] == "Tomas"){
   dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2010_11/Data"
 } else {
-  dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2010/Data"
+  dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2010\\Data"
 }
 
 # load packages
@@ -49,7 +49,7 @@ region$district <- NULL
 region$region <- as.integer(region$region)
 
 # get conversion variables
-qty2kg <- read_dta(file.path(dataPath, "../../IHS.Agricultural.Conversion.Factor.Database.dta"))
+qty2kg <- read_dta(file.path(dataPath, "../../../Other/Conversion/MWI/IHS.Agricultural.Conversion.Factor.Database.dta"))
 qty2kg$crop_code <- as.integer(qty2kg$crop_code)
 qty2kg$unit <- as.integer(qty2kg$unit)
 qty2kg$condition <- as.integer(qty2kg$condition)

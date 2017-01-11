@@ -19,7 +19,10 @@ library(stringr)
 
 # set working directory
 if(Sys.info()["user"] == "Tomas"){
-  filePath <- "C:/Users/Tomas/Documents/LEI/MWIYG/Code"}
+  filePath <- "C:/Users/Tomas/Documents/LEI/MWIYG/Code"} else {
+  filePath <- "~/MWIYG/Code"
+  }
+    
 
 # -------------------------------------
 # source all the files that will be used
