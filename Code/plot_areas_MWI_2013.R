@@ -8,10 +8,10 @@ library(haven)
 library(tidyr)
 
 # set working directory
-if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2013/Data"
-} else {
+if(Sys.info()["user"] == "morle001"){
   dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
+} else {
+  dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2013\\Data"
 }
 
 # area measurements recorded in Module B_1 of the

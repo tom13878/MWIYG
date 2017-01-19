@@ -10,10 +10,10 @@
 # -------------------------------------
 
 # set working directory
-if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2013/Data"
-} else {
+if(Sys.info()["user"] == "morle001"){
   dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
+} else {
+  dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2013\\Data"
 }
 
 # load packages
@@ -30,7 +30,7 @@ library(dplyr)
 fert_prices_1 <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_F.dta")) %>%
   transmute(y2_hhid, typ=toupper(as.character(as_factor(ag_f0c))),
             qty=ag_f16a, qty_unit = as_factor(ag_f16b), valu=ag_f19)
-levels(fert_prices_1$qty_unit) <- c(0.001, 1, 2, 3, 5, 10, 50, 1, 0.001, 96,97, 98, 99)
+levels(fert_prices_1$qty_unit) <- c(0, 0.001, 1, 2, 3, 5, 10, 50, 1, 0.001, 96,97, 98, 99, NaN)
 fert_prices_1$unit2kg <- as.numeric(as.character(fert_prices_1$qty_unit)); fert_prices_1$qty_unit <- NULL
 fert_prices_1$unit2kg <- ifelse(fert_prices_1$unit2kg > 90, NA, fert_prices_1$unit2kg)
 fert_prices_1$qty <- fert_prices_1$qty * fert_prices_1$unit2kg
@@ -40,7 +40,7 @@ fert_prices_1$unit2kg <- NULL
 fert_prices_2 <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_F.dta")) %>%
   transmute(y2_hhid, typ=toupper(as.character(as_factor(ag_f0c))),
             qty=ag_f26a, qty_unit = as_factor(ag_f26b), valu=ag_f29)
-levels(fert_prices_2$qty_unit) <- c(0.001, 1, 2, 3, 5, 10, 50, 1, 0.001, 96,97, 98, 99)
+levels(fert_prices_2$qty_unit) <- c(0, 0.001, 1, 2, 3, 5, 10, 50, 1, 0.001, 96,97, 98, 99, NaN)
 fert_prices_2$unit2kg <- as.numeric(as.character(fert_prices_2$qty_unit)); fert_prices_2$qty_unit <- NULL
 fert_prices_2$unit2kg <- ifelse(fert_prices_2$unit2kg > 90, NA, fert_prices_2$unit2kg)
 fert_prices_2$qty <- fert_prices_2$qty * fert_prices_2$unit2kg

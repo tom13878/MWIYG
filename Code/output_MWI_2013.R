@@ -6,8 +6,8 @@
 # -------------------------------------
 
 # set working directory
-if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2013/Data"
+if(Sys.info()["user"] == "morle001"){
+  dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
 } else {
   dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2013\\Data"
 }
@@ -44,7 +44,7 @@ region <- read_dta(file.path(dataPath, "Household/HH_MOD_A_FILT.dta")) %>%
 region$region <- as.integer(region$region)
 
 # get conversion variables
-qty2kg <- read_dta(file.path(dataPath, "../../IHS.Agricultural.Conversion.Factor.Database.dta"))
+qty2kg <- read_dta(file.path(dataPath, "../../../Other/Conversion/MWI/IHS.Agricultural.Conversion.Factor.Database.dta"))
 qty2kg$crop_code <- as.integer(qty2kg$crop_code)
 qty2kg$unit <- as.integer(qty2kg$unit)
 qty2kg$condition <- as.integer(qty2kg$condition)
@@ -53,6 +53,17 @@ qty2kg$flag <- NULL
 # join region variable to the oput variables
 # and then join with the conversion factors
 oput_2013 <- left_join(oput_2013, region)
+
+# attributes in the qty2kg conversion file
+# prevent joining attributes. Strip attributes
+# first
+stripAttributes <- function(df){
+  df[] <- lapply(df, as.vector)
+  return(df)
+}
+qty2kg <- stripAttributes(qty2kg)
+
+# now join works with no errors
 oput_2013 <- left_join(oput_2013, qty2kg)
 
 # multiply the recorded quantity by conversion
@@ -60,44 +71,6 @@ oput_2013 <- left_join(oput_2013, qty2kg)
 oput_2013$crop_qty_harv <- oput_2013$crop_qty_harv * oput_2013$conversion
 oput_2013$unit <- oput_2013$shell_unshelled <- oput_2013$conversion <-
   oput_2013$condition <- NULL
-# -------------------------------------
-# create dummy variables for crop groups
-# (fruit, cash crops (permanent),
-# Cereals/Tubers/Roots, cash crops (not permanent),
-# vegetables, legumes)
-# -------------------------------------
-
-# I was unable to place some foodtsuffs in 
-# the correct category. The following are unknown
-# 1. ground bean: code 27
-# 2. macademia: code 17
-# 3. Tanaposi: code 41
-# 4. NKHWANI: code 42
-# 5. Therere/Okra: code 43
-# 6. pea: code 46
-# 7. paprika: code 47
-
-fruit <- c(5, 6, 7, 9, 10, 11, 12, 13, 14)
-cash_crop_perm <- c(36, 39, 16)  # permanent cash crops
-ctr <- c(17, 18, 19, 20, 21, 22, 23,
-         24, 25, 26, 28, 29, 31, 32, 33, 45) # Cereals, Tubers, Roots
-cash_crop_nperm <- c(37) # non permanent cash crops
-vegetables <- c(40, 44)
-legumes <- c(11, 12, 13, 14, 15, 16, 34, 35, 38)
-
-
-oput_2013_x <- group_by(oput_2013, y2_hhid, plotnum) %>%
-  summarise(crop_count=length(unique(crop_code[!is.na(crop_code)])),
-            fruit=ifelse(any(crop_code %in% fruit), 1, 0),
-            cash_crops_perm=ifelse(any(crop_code %in% cash_crop_perm), 1, 0),
-            ctr=ifelse(any(crop_code %in% ctr), 1, 0),
-            cash_crop_nperm=ifelse(any(crop_code %in% cash_crop_nperm), 1, 0),
-            vegetables=ifelse(any(crop_code %in% vegetables), 1, 0),
-            legume=ifelse(any(crop_code %in% legumes), 1, 0),
-            maize_=ifelse(any(crop_code %in% c(1, 2, 3, 4)), 1, 0), # maize has crop code 1, 2, 3 or 4
-            wheat=ifelse(any(crop_code %in% 30), 1, 0)) # wheat has crop code 30
-
-oput_2013 <- left_join(oput_2013, oput_2013_x); rm(oput_2013_x)
 
 # who responded they produced zero crop, or did not respond (NA)
 # and wok out how to get the prices information. Prices will be
@@ -109,6 +82,9 @@ crop_unit_priceRS <- read_dta(file.path(dataPath, "Agriculture/AG_MOD_I.dta")) %
   select(y2_hhid, crop_code = ag_i0b,
          qty_harv = ag_i02a, unit = ag_i02b,
          condition = ag_i02c, crop_value = ag_i03)
+crop_unit_priceRS$crop_code <- as.integer(crop_unit_priceRS$crop_code)
+crop_unit_priceRS$unit <- as.integer(crop_unit_priceRS$unit)
+crop_unit_priceRS$condition <- as.integer(crop_unit_priceRS$condition)
 
 # Join with region and then conversion factor
 crop_unit_priceRS <- left_join(crop_unit_priceRS, region)
@@ -137,3 +113,4 @@ oput_2013$region <- oput_2013$unit <- oput_2013$condition <- NULL
 rm(list=c("legumes", "cash_crop_nperm", "cash_crop_perm",
           "ctr", "fruit", "vegetables", "crop_unit_priceRS",
           "dataPath", "region", "qty2kg"))
+

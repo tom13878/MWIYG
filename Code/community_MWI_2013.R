@@ -8,10 +8,10 @@ library(haven)
 library(tidyr)
 
 # set working directory
-if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2013/Data"
+if(Sys.info()["user"] == "morle001"){
+  dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
 } else {
-  dataPath <- "W:/LEI/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2013/Data"
+  dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2013\\Data"
 }
 
 # basic population info
@@ -37,7 +37,7 @@ comF$plant_month <- toupper(as_factor(comF$plant_month))
 comF$harv_month <- toupper(as_factor(comF$harv_month))
 comF$ext_agent <- toupper(as_factor(comF$ext_agent))
 comF$unit <- as_factor(comF$unit)
-levels(comF$unit) <- c(0.001, 1, 1.609)
+levels(comF$unit) <- c(0.001, 1, 1.609, NaN)
 comF$unit <- as.numeric(as.character(comF$unit))
 comF$dist2ext_agent <- comF$unit * comF$dist2ext_agent
 comF$unit <- NULL

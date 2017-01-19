@@ -8,10 +8,10 @@ library(haven)
 library(tidyr)
 
 # set working directory
-if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/Other/Plot_size"
+if(Sys.info()["user"] == "morle001"){
+  dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/Other/Plot_size"
 } else {
-  dataPath <- "W:/LEI/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/Other/Plot_size"
+  dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2010\\Data"
 }
 
 # Areas for wave 1 have been imputed by the world bank lsms-isa team

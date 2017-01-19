@@ -13,10 +13,10 @@
 # -------------------------------------
 
 # set working directory
-if(Sys.info()["user"] == "Tomas"){
-  dataPath <- "C:/Users/Tomas/Documents/LEI/data/MWI/2010_11/Data"
-} else {
+if(Sys.info()["user"] == "morle001"){
   dataPath <- "N:/Internationaal Beleid  (IB)/Projecten/2285000066 Africa Maize Yield Gap/SurveyData/MWI/2010/Data"
+} else {
+  dataPath <- "C:\\Users\\vandijkm\\OneDrive - IIASA\\SurveyData\\MWI\\2010\\Data"
 }
 
 # load packages
@@ -100,7 +100,7 @@ fertRS2$typ <- as_factor(fertRS2$typ)
 # make levels consistent with external
 # conversion to nitrogen file
 levels(fertRS1$typ) <- levels(fertRS2$typ) <-
-  c("NPK (MWI)", "DAP", "CAN", "UREA", "D compound", "OTHER")
+  c("NPK (MWI)", "DAP", "CAN", "UREA", "D compound", "OTHER", "NaN")
 
 # read in external conversion file
 conv <- read.csv(file.path(paste0(dataPath,"/../../.."), "Other/Fertilizer/Fert_comp.csv")) %>%
@@ -197,7 +197,7 @@ fertDS2$typ <- as_factor(fertDS2$typ)
 # make levels consistent with external
 # conversion to nitrogen file
 levels(fertDS1$typ) <- levels(fertDS2$typ) <-
-  c("NPK (MWI)", "DAP", "CAN", "UREA", "D compound", "OTHER")
+  c("NPK (MWI)", "DAP", "CAN", "UREA", "D compound", "OTHER", "NaN")
 
 # read in external conversion file
 conv <- read.csv(file.path(paste0(dataPath,"/../../.."), "Other/Fertilizer/Fert_comp.csv")) %>%
